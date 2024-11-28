@@ -5,6 +5,13 @@ const bodyParser = require("body-parser");
 const dns = require("dns");
 const shortid = require("shortid");
 require("dotenv").config();
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const urlInfoSchema = new Schema({
+  original_url: { type: "string", required: true },
+  short_url: { type: "string", required: true }
+});
+const UrlInfo = mongoose.model("url", urlInfoSchema);
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -12,8 +19,26 @@ var url_data;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/public", express.static(`${process.cwd()}/public`));
+connect_to_db();
+
+function connect_to_db() {
+  mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+}
+
+const create_and_save_url = (url_info = {}) => {
+  let url_model = new UrlInfo({
+    original_url: url_info.original_url,
+    short_url: url_info.short_url
+  });
+  url_model.save((err, data) => {
+    if (err) return console.error(err);
+  });
+};
 
 // API Requests
 
@@ -28,11 +53,12 @@ app.post("/api/shorturl", function (req, res) {
       if (err) {
         res.json({ error: "invalid url" });
       } else {
-        url_data = {
+        var url = {
           original_url: req.body.url,
           short_url: shortid.generate(),
         };
-        res.json(url_data);
+        create_and_save_url(url);
+        res.json(url);
       }
     });
   } catch (err) {
@@ -41,9 +67,10 @@ app.post("/api/shorturl", function (req, res) {
 });
 
 app.get("/api/shorturl/:short_url", function (req, res) {
-  if (req.params.short_url == url_data.short_url) {
-    res.redirect(url_data.original_url);
-  }
+  UrlInfo.findOne({short_url: req.params.short_url}, function(err, data) {
+    if (err) return console.error(err);
+    if(data && data.original_url) res.redirect(data.original_url);
+  })
 });
 
 // Listen to Port
