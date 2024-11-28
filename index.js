@@ -6,22 +6,23 @@ const dns = require("dns");
 const shortid = require("shortid");
 require("dotenv").config();
 const mongoose = require("mongoose");
+
+// MongoDB / Mongoose config
 const Schema = mongoose.Schema;
 const urlInfoSchema = new Schema({
   original_url: { type: "string", required: true },
   short_url: { type: "string", required: true }
 });
 const UrlInfo = mongoose.model("url", urlInfoSchema);
+connect_to_db();
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
-var url_data;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/public", express.static(`${process.cwd()}/public`));
-connect_to_db();
 
 function connect_to_db() {
   mongoose.connect(process.env.MONGO_URI, {
@@ -74,7 +75,6 @@ app.get("/api/shorturl/:short_url", function (req, res) {
 });
 
 // Listen to Port
-
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
 });
