@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const urlInfoSchema = new Schema({
   original_url: { type: "string", required: true },
-  short_url: { type: "string", required: true }
+  short_url: { type: "string", required: true },
 });
 const UrlInfo = mongoose.model("url", urlInfoSchema);
 connect_to_db();
@@ -34,7 +34,7 @@ function connect_to_db() {
 const create_and_save_url = (url_info = {}) => {
   let url_model = new UrlInfo({
     original_url: url_info.original_url,
-    short_url: url_info.short_url
+    short_url: url_info.short_url,
   });
   url_model.save((err, data) => {
     if (err) return console.error(err);
@@ -68,10 +68,10 @@ app.post("/api/shorturl", function (req, res) {
 });
 
 app.get("/api/shorturl/:short_url", function (req, res) {
-  UrlInfo.findOne({short_url: req.params.short_url}, function(err, data) {
+  UrlInfo.findOne({ short_url: req.params.short_url }, function (err, data) {
     if (err) return console.error(err);
-    if(data && data.original_url) res.redirect(data.original_url);
-  })
+    if (data && data.original_url) res.redirect(data.original_url);
+  });
 });
 
 // Listen to Port
